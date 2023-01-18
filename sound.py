@@ -2,21 +2,43 @@
 import RPi.GPIO as GPIO
 import time
 
+LOW_NOISE = 1  # noise below threshold
+HIGH_NOISE = 2  # noise above threshold
+NO_NOISE = 0
 # GPIO SETUP
-sound_port = 22
-led_port = 16
+SOUND_PORT = 22
+LED_PORT = 16
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(sound_port, GPIO.IN)
-GPIO.setup(led_port, GPIO.OUT)
+GPIO.setup(SOUND_PORT, GPIO.IN)
+GPIO.setup(LED_PORT, GPIO.OUT)
 GPIO.setwarnings(False)
+GPIO.output(LED_PORT, GPIO.LOW)  # turn off leds initially
+
+led_noise_mode = NO_NOISE
 
 
 # led on off
 def led_switch(status):
-    if status:
-        GPIO.output(led_port, GPIO.HIGH)
+    global led_noise_mode
+    if led_noise_mode == HIGH_NOISE:
+        return  # high noise already detected
+    elif status == 1:  # high noise detected
+        # do the high noise led sequence
+        led_noise_mode = HIGH_NOISE
+        GPIO.output(LED_PORT, GPIO.HIGH)
+        time.sleep(1)
+        GPIO.output(LED_PORT, GPIO.LOW)
+        led_noise_mode = NO_NOISE
     else:
-        GPIO.output(led_port, GPIO.LOW)
+        # noise below threshold
+        GPIO.output(LED_PORT, GPIO.HIGH)
+        time.sleep(0.25)
+        GPIO.output(LED_PORT, GPIO.LOW)
+        time.sleep(0.25)
+        GPIO.output(LED_PORT, GPIO.HIGH)
+        time.sleep(0.25)
+        GPIO.output(LED_PORT, GPIO.LOW)
+        led_noise_mode = NO_NOISE
 
 
 def callback(channel):
@@ -25,8 +47,8 @@ def callback(channel):
     led_switch(value)
 
 
-GPIO.add_event_detect(sound_port, GPIO.BOTH, bouncetime=300)  # let us know when the pin goes HIGH or LOW
-GPIO.add_event_callback(sound_port, callback)  # assign function to GPIO PIN, Run function on changsy
+GPIO.add_event_detect(SOUND_PORT, GPIO.BOTH, bouncetime=300)  # let us know when the pin goes HIGH or LOW
+GPIO.add_event_callback(SOUND_PORT, callback)  # assign function to GPIO PIN, Run function on changsy
 
 # run program forever after starting
 # I Use above callbacks to control GPIOs
