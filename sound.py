@@ -26,7 +26,7 @@ def led_switch(status):
         # do the high noise led sequence
         led_noise_mode = HIGH_NOISE
         GPIO.output(LED_PORT, GPIO.HIGH)
-        time.sleep(1)
+        time.sleep(2)
         GPIO.output(LED_PORT, GPIO.LOW)
         led_noise_mode = NO_NOISE
     else:
@@ -46,11 +46,11 @@ def callback(channel):
     print("callback event %s" % value)
     led_switch(value)
 
-
-GPIO.add_event_detect(SOUND_PORT, GPIO.BOTH, bouncetime=300)  # let us know when the pin goes HIGH or LOW
+# choose bounce time 800ms to detect each noise only once
+GPIO.add_event_detect(SOUND_PORT, GPIO.BOTH, bouncetime=800)  # let us know when the pin goes HIGH or LOW
 GPIO.add_event_callback(SOUND_PORT, callback)  # assign function to GPIO PIN, Run function on changsy
 
 # run program forever after starting
 # I Use above callbacks to control GPIOs
 while True:
-    time.sleep(1)
+    time.sleep(2)
